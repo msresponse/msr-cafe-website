@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MSR Cafe - Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body class="bg-gray-900 text-gray-100 min-h-screen p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div
+            class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-800 pb-4 mb-6 gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-amber-500">MSR Cafe Admin</h1>
+                <p class="text-sm text-gray-400">Live Orders & Reservations Management</p>
+            </div>
+            <button onclick="loadDashboardData()"
+                class="bg-amber-600 hover:bg-amber-500 text-white font-semibold px-4 py-2 rounded-lg shadow flex items-center gap-2 transition">
+                🔄 Refresh Data
+            </button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+            <!-- Orders Column -->
+            <div>
+                <h2 class="text-xl font-bold text-amber-400 mb-4 flex items-center justify-between">
+                    <span>☕ Recent Orders</span>
+                    <span id="order-count"
+                        class="text-xs bg-amber-900/60 text-amber-300 px-2.5 py-1 rounded-full">0</span>
+                </h2>
+                <div id="orders-container" class="space-y-4">
+                    <div class="text-gray-500 italic">Loading orders...</div>
+                </div>
+            </div>
+
+            <!-- Reservations Column -->
+            <div>
+                <h2 class="text-xl font-bold text-amber-400 mb-4 flex items-center justify-between">
+                    <span>📅 Table Reservations</span>
+                    <span id="reservation-count"
+                        class="text-xs bg-amber-900/60 text-amber-300 px-2.5 py-1 rounded-full">0</span>
+                </h2>
+                <div id="reservations-container" class="space-y-4">
+                    <div class="text-gray-500 italic">Loading reservations...</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const supabaseUrl = "https://chmbsdsjjxawcawruut.supabase.co";
+        const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNobWJzZHNqanhhd2Nhd3J1dXQiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTczODE0MTAYOX0.TN8at0_JrA6p7240zCP4hChDHmfi7QZn67v0gdE0Cxo";
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+        async function loadDashboardData() {
+            // Fetch Orders
+            const { data: orders, error: orderErr } = await supabaseClient
+                .from('orders')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            const ordersDiv = document.getElementById('orders-container');
+            if (orderErr) {
+                ordersDiv.innerHTML = `<p class="text-red-400">Error: ${orderErr.message}</p>`;
+            } else if (!orders || orders.length === 0) {
+                ordersDiv.innerHTML = `<p class="text-gray-500">No orders found.</p>`;
+                document.getElementById('order-count').innerText = '0';
+            } else {
+                document.getElementById('order-count').innerText = orders.length;
+                ordersDiv.innerHTML = orders.map(o => `
+          <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 shadow-md">
+            <div class="flex justify-between items-start mb-2">
+              <span class="text-xs font-mono text-gray-400">ID: ${o.id || 'N/A'}</span>
+              <span class="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded font-semibold">${o.status || 'Pending'}</span>
+            </div>
+            <p class="font-bold text-lg text-white">${o.customer_name || 'Guest'}</p>
+            <p class="text-sm text-gray-300">📞 ${o.phone || 'No phone'}</p>
+            <p class="text-sm text-gray-300">📍 Location/Table: ${o.address_or_table || o.order_type || 'N/A'}</p>
+            <div class="mt-2 text-xs text-gray-400 bg-gray-900/50 p-2 rounded border border-gray-700/50">
+              ${typeof o.items === 'object' ? JSON.stringify(o.items) : (o.items || 'No items listed')}
+            </div>
+            <div class="mt-3 flex justify-between items-center text-xs text-gray-400 border-t border-gray-700/50 pt-2">
+              <span>Total: <strong class="text-emerald-400 text-sm">₹${o.total_amount || 0}</strong></span>
+              <span>${o.created_at ? new Date(o.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</span>
+            </div>
+          </div>
+        `).join('');
+            }
+
+            // Fetch Reservations
+            const { data: reservations, error: resErr } = await supabaseClient
+                .from('reservations')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            const resDiv = document.getElementById('reservations-container');
+            if (resErr) {
+                resDiv.innerHTML = `<p class="text-red-400">Error: ${resErr.message}</p>`;
+            } else if (!reservations || reservations.length === 0) {
+                resDiv.innerHTML = `<p class="text-gray-500">No reservations found.</p>`;
+                document.getElementById('reservation-count').innerText = '0';
+            } else {
+                document.getElementById('reservation-count').innerText = reservations.length;
+                resDiv.innerHTML = reservations.map(r => `
+          <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 shadow-md">
+            <div class="flex justify-between items-start mb-2">
+              <span class="text-xs font-mono text-gray-400">ID: ${r.id || 'N/A'}</span>
+              <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded font-semibold">Booked</span>
+            </div>
+            <p class="font-bold text-lg text-white">${r.name || r.customer_name || 'Guest'}</p>
+            <p class="text-sm text-gray-300">📞 ${r.phone || 'No phone'}</p>
+            <p class="text-sm text-amber-300">📅 Date & Time: ${r.date || ''} at ${r.time || ''}</p>
+            <p class="text-sm text-gray-300">👥 Guests: ${r.guests || r.guest_count || 1}</p>
+            ${r.special_notes ? `<p class="mt-2 text-xs text-gray-400 italic">" ${r.special_notes} "</p>` : ''}
+            <div class="mt-3 text-right text-xs text-gray-400 border-t border-gray-700/50 pt-2">
+              ${r.created_at ? new Date(r.created_at).toLocaleDateString() : ''}
+            </div>
+          </div>
+        `).join('');
+            }
+        }
+
+        // Auto load on page open
+        loadDashboardData();
+
+        // Auto-refresh every 15 seconds for live order monitoring
+        setInterval(loadDashboardData, 15000);
+    </script>
+</body>
+
+</html>
