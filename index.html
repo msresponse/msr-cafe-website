@@ -795,8 +795,8 @@
 
                 setIsPlacingOrder(false);
                 if (error) {
-                    console.error("Order submission error:", error);
-                    alert("Failed to submit order. Please check your connection.");
+                    console.error("Supabase Submission Error:", error);
+                    alert("Submission failed: " + (error.message || JSON.stringify(error)));
                 } else {
                     const details = {
                         orderId: randomOrderId,
@@ -826,15 +826,15 @@
                     customer_phone: onPageReservation.phone,
                     reservation_date: onPageReservation.date,
                     time_slot: onPageReservation.timeSlot,
-                    guests_count: onPageReservation.guests,
+                    guests_count: parseInt(onPageReservation.guests, 10),
                     seating_preference: onPageReservation.seating,
                     special_notes: onPageReservation.notes
                 });
 
                 setIsSubmittingReservation(false);
                 if (error) {
-                    console.error("Reservation error:", error);
-                    alert("Failed to submit reservation. Please check your connection.");
+                    console.error("Supabase Submission Error:", error);
+                    alert("Submission failed: " + (error.message || JSON.stringify(error)));
                 } else {
                     const details = {
                         id: randomId,
