@@ -6,7 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MSR Cafe - Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 1. Load Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- 2. Load your project's main Supabase configuration -->
+    <script src="lib/supabase.js"></script>
 </head>
 
 <body class="bg-gray-900 text-gray-100 min-h-screen p-4 md:p-8">
@@ -56,25 +59,20 @@
     </div>
 
     <script>
-        const supabaseUrl = "https://chmbsdsjjxawcawruut.supabase.co";
-        const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNobWJzZHNqanhhd2Nhd3J1dXQiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTczODE0MTAYOX0.TN8at0_JrA6p7240zCP4hChDHmfi7QZn67v0gdE0Cxo";
-
-        let supabaseClient;
-        try {
-            supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
-        } catch (err) {
-            console.error("Failed to construct Supabase client:", err);
-        }
-
         async function loadDashboardData() {
-            if (!supabaseClient) {
-                document.getElementById('orders-container').innerHTML = `<p class="text-red-400">Supabase CDN failed to load.</p>`;
+            // Use the client initialized by lib/supabase.js
+            const client = window.supabaseClient || (typeof supabaseClient !== 'undefined' ? supabaseClient : null);
+
+            if (!client) {
+                console.error("Supabase client is not available.");
+                document.getElementById('orders-container').innerHTML = `<p class="text-red-400">Supabase connection not initialized. Check lib/supabase.js.</p>`;
+                document.getElementById('reservations-container').innerHTML = `<p class="text-red-400">Supabase connection not initialized.</p>`;
                 return;
             }
 
             // Fetch Orders
             try {
-                const { data: orders, error: orderErr } = await supabaseClient
+                const { data: orders, error: orderErr } = await client
                     .from('orders')
                     .select('*')
                     .order('created_at', { ascending: false });
@@ -88,31 +86,31 @@
                 } else {
                     document.getElementById('order-count').innerText = orders.length;
                     ordersDiv.innerHTML = orders.map(o => `
-          <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 shadow-md">
-            <div class="flex justify-between items-start mb-2">
-              <span class="text-xs font-mono text-gray-400">ID: ${o.id || 'N/A'}</span>
-              <span class="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded font-semibold">${o.status || 'Pending'}</span>
+            <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 shadow-md">
+              <div class="flex justify-between items-start mb-2">
+                <span class="text-xs font-mono text-gray-400">ID: ${o.id || 'N/A'}</span>
+                <span class="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded font-semibold">${o.status || 'Pending'}</span>
+              </div>
+              <p class="font-bold text-lg text-white">${o.customer_name || 'Guest'}</p>
+              <p class="text-sm text-gray-300">📞 ${o.phone || 'No phone'}</p>
+              <p class="text-sm text-gray-300">📍 Location/Table: ${o.address_or_table || o.order_type || 'N/A'}</p>
+              <div class="mt-2 text-xs text-gray-400 bg-gray-900/50 p-2 rounded border border-gray-700/50">
+                ${typeof o.items === 'object' ? JSON.stringify(o.items) : (o.items || 'No items listed')}
+              </div>
+              <div class="mt-3 flex justify-between items-center text-xs text-gray-400 border-t border-gray-700/50 pt-2">
+                <span>Total: <strong class="text-emerald-400 text-sm">₹${o.total_amount || 0}</strong></span>
+                <span>${o.created_at ? new Date(o.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</span>
+              </div>
             </div>
-            <p class="font-bold text-lg text-white">${o.customer_name || 'Guest'}</p>
-            <p class="text-sm text-gray-300">📞 ${o.phone || 'No phone'}</p>
-            <p class="text-sm text-gray-300">📍 Location/Table: ${o.address_or_table || o.order_type || 'N/A'}</p>
-            <div class="mt-2 text-xs text-gray-400 bg-gray-900/50 p-2 rounded border border-gray-700/50">
-              ${typeof o.items === 'object' ? JSON.stringify(o.items) : (o.items || 'No items listed')}
-            </div>
-            <div class="mt-3 flex justify-between items-center text-xs text-gray-400 border-t border-gray-700/50 pt-2">
-              <span>Total: <strong class="text-emerald-400 text-sm">₹${o.total_amount || 0}</strong></span>
-              <span>${o.created_at ? new Date(o.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</span>
-            </div>
-          </div>
-        `).join('');
+          `).join('');
                 }
-            } catch (e) {
-                document.getElementById('orders-container').innerHTML = `<p class="text-red-400">Network Blocked: Check connection/ad-blocker.</p>`;
+            } catch (err) {
+                document.getElementById('orders-container').innerHTML = `<p class="text-red-400">Fetch error: ${err.message}</p>`;
             }
 
             // Fetch Reservations
             try {
-                const { data: reservations, error: resErr } = await supabaseClient
+                const { data: reservations, error: resErr } = await client
                     .from('reservations')
                     .select('*')
                     .order('created_at', { ascending: false });
@@ -126,28 +124,31 @@
                 } else {
                     document.getElementById('reservation-count').innerText = reservations.length;
                     resDiv.innerHTML = reservations.map(r => `
-          <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 shadow-md">
-            <div class="flex justify-between items-start mb-2">
-              <span class="text-xs font-mono text-gray-400">ID: ${r.id || 'N/A'}</span>
-              <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded font-semibold">Booked</span>
+            <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 shadow-md">
+              <div class="flex justify-between items-start mb-2">
+                <span class="text-xs font-mono text-gray-400">ID: ${r.id || 'N/A'}</span>
+                <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded font-semibold">Booked</span>
+              </div>
+              <p class="font-bold text-lg text-white">${r.name || r.customer_name || 'Guest'}</p>
+              <p class="text-sm text-gray-300">📞 ${r.phone || 'No phone'}</p>
+              <p class="text-sm text-amber-300">📅 Date & Time: ${r.date || ''} at ${r.time || ''}</p>
+              <p class="text-sm text-gray-300">👥 Guests: ${r.guests || r.guest_count || 1}</p>
+              ${r.special_notes ? `<p class="mt-2 text-xs text-gray-400 italic">" ${r.special_notes} "</p>` : ''}
+              <div class="mt-3 text-right text-xs text-gray-400 border-t border-gray-700/50 pt-2">
+                ${r.created_at ? new Date(r.created_at).toLocaleDateString() : ''}
+              </div>
             </div>
-            <p class="font-bold text-lg text-white">${r.name || r.customer_name || 'Guest'}</p>
-            <p class="text-sm text-gray-300">📞 ${r.phone || 'No phone'}</p>
-            <p class="text-sm text-amber-300">📅 Date & Time: ${r.date || ''} at ${r.time || ''}</p>
-            <p class="text-sm text-gray-300">👥 Guests: ${r.guests || r.guest_count || 1}</p>
-            ${r.special_notes ? `<p class="mt-2 text-xs text-gray-400 italic">" ${r.special_notes} "</p>` : ''}
-            <div class="mt-3 text-right text-xs text-gray-400 border-t border-gray-700/50 pt-2">
-              ${r.created_at ? new Date(r.created_at).toLocaleDateString() : ''}
-            </div>
-          </div>
-        `).join('');
+          `).join('');
                 }
-            } catch (e) {
-                document.getElementById('reservations-container').innerHTML = `<p class="text-red-400">Network Blocked: Check connection/ad-blocker.</p>`;
+            } catch (err) {
+                document.getElementById('reservations-container').innerHTML = `<p class="text-red-400">Fetch error: ${err.message}</p>`;
             }
         }
 
-        loadDashboardData();
+        // Auto-load once DOM is ready
+        document.addEventListener('DOMContentLoaded', loadDashboardData);
+
+        // Auto-refresh every 15 seconds
         setInterval(loadDashboardData, 15000);
     </script>
 </body>
