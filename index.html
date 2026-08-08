@@ -1,14 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MSR Cafe - Crafted Coffees & Fresh Local Flavors</title>
-    
+
     <!-- Meta tags for SEO -->
-    <meta name="description" content="Your everyday spot for artisanal brews, warm paninis, and unforgettable moments. Discover crafted coffees and fresh local Indian neighborhood flavors at MSR Cafe.">
-    <meta name="keywords" content="MSR Cafe, Cafe, Coffee, Panini, India, Neighborhood Cafe, Espresso, Cold Brew, Table Reservation">
-    
+    <meta name="description"
+        content="Your everyday spot for artisanal brews, warm paninis, and unforgettable moments. Discover crafted coffees and fresh local Indian neighborhood flavors at MSR Cafe.">
+    <meta name="keywords"
+        content="MSR Cafe, Cafe, Coffee, Panini, India, Neighborhood Cafe, Espresso, Cold Brew, Table Reservation">
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -81,18 +84,20 @@
             }
         }
     </script>
-    
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap"
+        rel="stylesheet">
+
     <!-- React and ReactDOM -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <!-- Babel for compiling JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
+
     <!-- Supabase CDN and Client Init -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
@@ -105,30 +110,37 @@
         html {
             scroll-behavior: smooth;
         }
+
         body {
             font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
             background-color: #FDFBF7;
             color: #2C1A14;
         }
+
         .text-shadow-sm {
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
+
         /* Custom scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
         }
+
         ::-webkit-scrollbar-track {
             background: #FDFBF7;
         }
+
         ::-webkit-scrollbar-thumb {
             background: #2C1A14;
             border-radius: 4px;
         }
+
         ::-webkit-scrollbar-thumb:hover {
             background: #D97706;
         }
     </style>
 </head>
+
 <body class="selection:bg-amberGold/30 selection:text-espresso">
     <div id="root"></div>
 
@@ -556,13 +568,12 @@
             }, []);
 
             return (
-                <div 
-                    ref={ref} 
-                    className={`${className} transition-all duration-1000 ease-out transform ${
-                        isIntersecting 
-                            ? 'translate-y-0 opacity-100' 
+                <div
+                    ref={ref}
+                    className={`${className} transition-all duration-1000 ease-out transform ${isIntersecting
+                            ? 'translate-y-0 opacity-100'
                             : 'translate-y-10 opacity-0'
-                    }`}
+                        }`}
                 >
                     {children}
                 </div>
@@ -607,15 +618,15 @@
 
             const [orderSuccess, setOrderSuccess] = useState(false);
             const [placedOrderDetails, setPlacedOrderDetails] = useState(null);
-            
+
             // Supabase loading states
             const [isPlacingOrder, setIsPlacingOrder] = useState(false);
             const [isSubmittingReservation, setIsSubmittingReservation] = useState(false);
-            
+
             // Reservation popup modal states
             const [showReservationModal, setShowReservationModal] = useState(false);
             const [reservationModalDetails, setReservationModalDetails] = useState(null);
-            
+
             // Admin backoffice routing and view states
             const [isAdminView, setIsAdminView] = useState(window.location.hash === '#admin');
             const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
@@ -638,7 +649,7 @@
                 try {
                     const ordersResult = await window.supabaseClient.from('orders').select('*').order('created_at', { ascending: false });
                     const reservationsResult = await window.supabaseClient.from('reservations').select('*').order('created_at', { ascending: false });
-                    
+
                     if (ordersResult.data) setAdminOrders(ordersResult.data);
                     if (reservationsResult.data) setAdminReservations(reservationsResult.data);
                 } catch (err) {
@@ -658,7 +669,7 @@
                     .from('orders')
                     .update({ status: newStatus })
                     .eq('id', orderId);
-                
+
                 if (error) {
                     console.error("Failed to update status:", error);
                     alert("Failed to update status. Please try again.");
@@ -684,12 +695,12 @@
             // Add customized item to cart
             const addCustomizedToCart = (item, option, milk, qty) => {
                 let unitPrice = item.price || 0;
-                
+
                 // Get price for specific variant if selected
                 if (item.variantPrices && option) {
                     unitPrice = item.variantPrices[option] || 0;
                 }
-                
+
                 // Add subflavor price addon if applicable (e.g. +20 for Caffe Latte / Flavored Iced Latte)
                 if (item.subflavors && option && item.subflavorPrice) {
                     unitPrice += item.subflavorPrice;
@@ -721,7 +732,7 @@
                         quantity: qty
                     }];
                 });
-                
+
                 showToast(`${item.name} added to order!`);
             };
 
@@ -770,10 +781,10 @@
             const handlePlaceOrder = async (e) => {
                 e.preventDefault();
                 if (cart.length === 0) return;
-                
+
                 setIsPlacingOrder(true);
                 const randomOrderId = '#MSR-' + Math.floor(1000 + Math.random() * 9000);
-                
+
                 let addrOrTable = '';
                 if (orderType === 'dine-in') addrOrTable = `Table #${tableNumber}`;
                 else if (orderType === 'takeaway') addrOrTable = `Pickup: ${pickupTime.replace('-mins', ' Mins')}`;
@@ -819,7 +830,7 @@
                 e.preventDefault();
                 setIsSubmittingReservation(true);
                 const randomId = 'MSR-RES-' + Math.floor(10000 + Math.random() * 90000);
-                
+
                 const { data, error } = await window.supabaseClient.from('reservations').insert({
                     id: randomId,
                     customer_name: onPageReservation.fullName,
@@ -848,7 +859,7 @@
                     };
                     setReservationModalDetails(details);
                     setShowReservationModal(true);
-                    
+
                     // Reset form state
                     setOnPageReservation({
                         fullName: '',
@@ -894,10 +905,10 @@
             const filteredItems = MENU_ITEMS.filter(item => {
                 const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
                 const query = searchQuery.toLowerCase();
-                const matchesSearch = item.name.toLowerCase().includes(query) || 
-                                      (item.description && item.description.toLowerCase().includes(query)) ||
-                                      (item.subflavors && item.subflavors.some(f => f.toLowerCase().includes(query))) ||
-                                      (item.variants && item.variants.some(v => v.toLowerCase().includes(query)));
+                const matchesSearch = item.name.toLowerCase().includes(query) ||
+                    (item.description && item.description.toLowerCase().includes(query)) ||
+                    (item.subflavors && item.subflavors.some(f => f.toLowerCase().includes(query))) ||
+                    (item.variants && item.variants.some(v => v.toLowerCase().includes(query)));
                 return matchesCategory && matchesSearch;
             });
 
@@ -911,7 +922,7 @@
                     text += `• ${item.quantity} x ${item.name}${customizations} - ₹${item.price * item.quantity}\n`;
                 });
                 text += `\nTotal Amount: ₹${cartTotal + Math.round(cartTotal * 0.05)} (incl. 5% GST)`;
-                
+
                 if (customerName) text += `\n\nName: ${customerName}`;
                 if (customerPhone) text += `\nPhone: ${customerPhone}`;
                 if (orderType) {
@@ -925,7 +936,7 @@
 
             return (
                 <div className="min-h-screen flex flex-col bg-cream text-espresso relative overflow-x-hidden">
-                    
+
                     {/* TOAST NOTIFICATION */}
                     {toast.visible && (
                         <div className="fixed top-6 left-1/2 z-[100] bg-espresso text-cream px-6 py-3.5 rounded-full font-bold shadow-2xl flex items-center space-x-2 border border-amberGold animate-slide-down">
@@ -933,11 +944,11 @@
                             <span className="text-xs font-black uppercase tracking-wider font-sans">{toast.message}</span>
                         </div>
                     )}
-                    
+
                     {/* STICKY NAVIGATION BAR */}
                     <header className="sticky top-0 z-40 w-full bg-cream/80 backdrop-blur-md border-b border-espresso/10 transition-all duration-300">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-                            
+
                             {/* Logo */}
                             <a href="#" className="flex items-center space-x-2 group">
                                 <div className="bg-espresso text-cream p-2.5 rounded-xl transition-all duration-300 group-hover:bg-amberGold">
@@ -974,7 +985,7 @@
 
                             {/* Action Button & Hamburger */}
                             <div className="flex items-center space-x-4">
-                                <button 
+                                <button
                                     onClick={() => setIsCartOpen(true)}
                                     className="relative flex items-center space-x-2 bg-espresso text-cream hover:bg-amberGold px-5 py-2.5 rounded-full transition-all duration-300 font-semibold shadow-md hover:shadow-lg active:scale-95 group"
                                 >
@@ -989,7 +1000,7 @@
                                 </button>
 
                                 {/* Mobile Hamburger Menu */}
-                                <button 
+                                <button
                                     onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                                     className="md:hidden p-2 rounded-lg hover:bg-espresso/5 transition-colors border border-espresso/10"
                                 >
@@ -1017,14 +1028,14 @@
                                             <Icons.X className="w-6 h-6" />
                                         </button>
                                     </div>
-                                    
+
                                     <nav className="flex flex-col space-y-6 pt-8 text-lg font-medium">
                                         <a href="#" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-amberGold transition-colors">Home</a>
                                         <a href="#menu-section" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-amberGold transition-colors">Menu</a>
                                         <a href="#about-section" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-amberGold transition-colors">About Us</a>
-                                        <a 
-                                            href="#reservation-section" 
-                                            onClick={() => setIsMobileMenuOpen(false)} 
+                                        <a
+                                            href="#reservation-section"
+                                            onClick={() => setIsMobileMenuOpen(false)}
                                             className="hover:text-amberGold transition-colors text-left"
                                         >
                                             Reserve Table
@@ -1034,7 +1045,7 @@
                                 </div>
 
                                 <div className="border-t border-espresso/10 pt-6">
-                                    <button 
+                                    <button
                                         onClick={() => {
                                             setIsMobileMenuOpen(false);
                                             setIsCartOpen(true);
@@ -1059,15 +1070,15 @@
 
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-                                
+
                                 {/* Hero Text Content */}
                                 <div className="lg:col-span-6 space-y-8 animate-slide-up text-center lg:text-left">
-                                    
+
                                     <div className="inline-flex items-center space-x-2 bg-amberGold/10 text-amberGold px-4 py-1.5 rounded-full text-sm font-semibold tracking-wide border border-amberGold/20">
                                         <span className="w-2 h-2 rounded-full bg-amberGold animate-pulse"></span>
                                         <span>Now Open in Gole Market, Udhampur</span>
                                     </div>
-                                    
+
                                     <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-black leading-tight text-espresso">
                                         Crafted Coffees & <br className="hidden sm:inline" />
                                         <span className="text-amberGold relative inline-block">
@@ -1078,28 +1089,28 @@
                                         </span> <br className="hidden sm:inline" />
                                         at MSR
                                     </h1>
-                                    
+
                                     <p className="text-base sm:text-lg text-espresso/70 max-w-xl mx-auto lg:mx-0 leading-relaxed">
                                         Your everyday spot for artisanal brews, warm paninis, and unforgettable moments in town. Infusing modern craft with warm Indian hospitality.
                                     </p>
-                                    
+
                                     {/* CTAs */}
                                     <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
-                                        <a 
+                                        <a
                                             href="#menu-section"
                                             className="w-full sm:w-auto bg-espresso text-cream hover:bg-amberGold text-center font-bold px-8 py-4 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl active:scale-95 flex items-center justify-center gap-2 group"
                                         >
                                             Explore Full Menu
                                             <Icons.ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                         </a>
-                                        <a 
+                                        <a
                                             href="#reservation-section"
                                             className="w-full sm:w-auto bg-transparent border-2 border-espresso text-espresso hover:bg-espresso hover:text-cream text-center font-bold px-8 py-3.5 rounded-xl transition-all duration-300 active:scale-95 flex items-center justify-center"
                                         >
                                             Reserve a Table
                                         </a>
                                     </div>
-                                    
+
                                     {/* Mobile/Tablet highlight strip inside text column */}
                                     <div className="hidden lg:grid grid-cols-3 gap-4 pt-6 border-t border-espresso/10">
                                         <div className="flex items-center space-x-3 group">
@@ -1136,17 +1147,17 @@
                                 {/* Hero Visual Showcase (Asymmetric Image Grid) */}
                                 <div className="lg:col-span-6 animate-fade-in">
                                     <div className="grid grid-cols-2 gap-4 h-[420px] sm:h-[500px] md:h-[550px] relative">
-                                        
+
                                         {/* Decorative elements */}
                                         <div className="absolute -top-4 -left-4 w-12 h-12 border-t-2 border-l-2 border-amberGold/40 rounded-tl-xl pointer-events-none"></div>
                                         <div className="absolute -bottom-4 -right-4 w-12 h-12 border-b-2 border-r-2 border-amberGold/40 rounded-br-xl pointer-events-none"></div>
 
                                         {/* Main interior image */}
                                         <div className="col-span-2 md:col-span-1 relative overflow-hidden rounded-3xl group shadow-md hover:shadow-xl transition-all duration-300">
-                                            <img 
-                                                src="assets/cozy_cafe.png" 
-                                                alt="Cozy Cafe Ambience" 
-                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                                            <img
+                                                src="assets/cozy_cafe.png"
+                                                alt="Cozy Cafe Ambience"
+                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                             />
                                             <div className="absolute inset-0 bg-gradient-to-t from-espresso/80 via-espresso/20 to-transparent flex items-end p-5">
                                                 <div className="text-cream">
@@ -1160,10 +1171,10 @@
                                         <div className="grid grid-rows-2 gap-4 col-span-2 md:col-span-1">
                                             {/* Latte Image */}
                                             <div className="relative overflow-hidden rounded-3xl group shadow-md hover:shadow-xl transition-all duration-300">
-                                                <img 
-                                                    src="assets/iced_latte.png" 
-                                                    alt="Aesthetic Iced Latte" 
-                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                                                <img
+                                                    src="assets/iced_latte.png"
+                                                    alt="Aesthetic Iced Latte"
+                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                                 />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-espresso/80 via-espresso/20 to-transparent flex items-end p-5">
                                                     <div className="text-cream">
@@ -1175,10 +1186,10 @@
 
                                             {/* Panini Image */}
                                             <div className="relative overflow-hidden rounded-3xl group shadow-md hover:shadow-xl transition-all duration-300">
-                                                <img 
-                                                    src="assets/warm_panini.png" 
-                                                    alt="Warm Toasted Panini" 
-                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                                                <img
+                                                    src="assets/warm_panini.png"
+                                                    alt="Warm Toasted Panini"
+                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                                 />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-espresso/80 via-espresso/20 to-transparent flex items-end p-5">
                                                     <div className="text-cream">
@@ -1231,7 +1242,7 @@
                     {/* INTERACTIVE COMPREHENSIVE MENU SECTION */}
                     <section id="menu-section" className="py-20 bg-espresso/5 border-t border-b border-espresso/10">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                            
+
                             {/* Menu Header */}
                             <Reveal className="text-center max-w-2xl mx-auto mb-12 space-y-4 block">
                                 <span className="text-amberGold text-xs uppercase tracking-widest font-black">Taste the Craft</span>
@@ -1241,9 +1252,9 @@
 
                             {/* Search Controls */}
                             <div className="max-w-md mx-auto mb-10 relative">
-                                <input 
-                                    type="text" 
-                                    placeholder="Search by name, variant, or flavor..." 
+                                <input
+                                    type="text"
+                                    placeholder="Search by name, variant, or flavor..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="w-full bg-cream border border-espresso/10 rounded-xl py-3.5 pl-11 pr-4 text-espresso focus:outline-none focus:border-amberGold shadow-sm placeholder:text-espresso/45 transition-colors text-sm"
@@ -1255,7 +1266,7 @@
                                     </svg>
                                 </div>
                                 {searchQuery && (
-                                    <button 
+                                    <button
                                         onClick={() => setSearchQuery('')}
                                         className="absolute right-4 top-1/2 -translate-y-1/2 text-espresso/40 hover:text-espresso"
                                     >
@@ -1283,8 +1294,8 @@
                                     <span className="text-4xl">☕</span>
                                     <h3 className="font-serif text-2xl font-bold text-espresso">No items match your search</h3>
                                     <p className="text-espresso/60 max-w-sm mx-auto text-sm">Try typing a different name or variant, or change your category filter!</p>
-                                    <button 
-                                        onClick={() => { setSearchQuery(''); setActiveCategory('all'); }} 
+                                    <button
+                                        onClick={() => { setSearchQuery(''); setActiveCategory('all'); }}
                                         className="bg-espresso text-cream hover:bg-amberGold px-6 py-2.5 rounded-xl font-bold text-sm transition-colors"
                                     >
                                         Reset Filters
@@ -1297,7 +1308,7 @@
                                         return (
                                             <Reveal key={item.id} className="h-full">
                                                 <div className="bg-cream p-6 rounded-3xl border border-espresso/5 hover:border-amberGold/20 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden h-full">
-                                                    
+
                                                     {/* Badge Top Left */}
                                                     {item.badge && (
                                                         <div className="absolute top-4 left-4 z-10 flex gap-1.5">
@@ -1325,7 +1336,7 @@
                                                             <p className="text-[10px] text-espresso/45 uppercase tracking-wider font-semibold font-sans">{item.category.replace('-', ' ')}</p>
                                                         </div>
                                                         <p className="text-xs text-espresso/60 leading-relaxed min-h-[48px] font-sans">{item.description}</p>
-                                                        
+
                                                         {/* Options summary pill */}
                                                         {(item.variants || item.subflavors) && (
                                                             <div className="bg-espresso/5 px-3 py-2 rounded-xl border border-espresso/5 flex flex-wrap gap-1.5 items-center font-sans">
@@ -1344,8 +1355,8 @@
                                                             </span>
                                                             <span className="text-xl font-black text-espresso">₹{startingPrice}</span>
                                                         </div>
-                                                        
-                                                        <button 
+
+                                                        <button
                                                             onClick={() => handleDirectAdd(item)}
                                                             className="bg-espresso text-cream hover:bg-amberGold hover:text-cream px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 active:scale-95 flex items-center gap-1.5 shadow-sm group-hover:shadow hover:shadow-[0_0_12px_rgba(217,119,6,0.3)] min-w-[44px]"
                                                         >
@@ -1392,7 +1403,7 @@
                     <section id="reservation-section" className="py-20 bg-espresso/5 border-t border-espresso/10">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-                                
+
                                 {/* Left Column: Reservation Form */}
                                 <div className="lg:col-span-7 bg-cream rounded-3xl p-6 sm:p-8 border border-espresso/5 shadow-sm space-y-6">
                                     <Reveal className="space-y-2 block">
@@ -1400,7 +1411,7 @@
                                         <h2 className="font-serif text-3xl font-black text-espresso">Book a Table at MSR</h2>
                                         <p className="text-espresso/70 text-sm">Plan a cozy coffee date, work session, or gathering with friends.</p>
                                     </Reveal>
-                                    
+
                                     {onPageReservationSuccess ? (
                                         /* Inline success card */
                                         <div className="bg-green-50 border border-green-200 rounded-2xl p-6 text-center space-y-4 animate-fade-in">
@@ -1455,7 +1466,7 @@
                                     ) : (
                                         /* Inline form */
                                         <form onSubmit={handleReservationSubmit} className="space-y-4 font-sans text-sm">
-                                            
+
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 <div className="space-y-1">
                                                     <label className="text-[10px] font-black uppercase tracking-wider text-espresso/60">Full Name</label>
@@ -1575,8 +1586,8 @@
                                     )}
                                 </div>
 
-                                    <Reveal className="lg:col-span-5 flex flex-col justify-between gap-6 block">
-                                    
+                                <Reveal className="lg:col-span-5 flex flex-col justify-between gap-6 block">
+
                                     {/* Contact Information Card */}
                                     <div className="bg-cream rounded-3xl p-6 border border-espresso/5 shadow-sm space-y-6">
                                         <div className="space-y-2">
@@ -1611,9 +1622,9 @@
                                         </div>
 
                                         <div className="pt-2">
-                                            <a 
-                                                href="https://www.google.com/maps/search/?api=1&query=Gole+Market,+Udhampur,+Jammu+and+Kashmir+182101" 
-                                                target="_blank" 
+                                            <a
+                                                href="https://www.google.com/maps/search/?api=1&query=Gole+Market,+Udhampur,+Jammu+and+Kashmir+182101"
+                                                target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="w-full inline-flex items-center justify-center gap-2 bg-espresso/5 hover:bg-espresso/10 border border-espresso/15 hover:border-espresso/30 text-espresso font-bold py-3.5 px-4 rounded-xl transition-all text-xs"
                                             >
@@ -1624,13 +1635,13 @@
 
                                     {/* Embedded Interactive Map Container */}
                                     <div className="bg-cream rounded-3xl overflow-hidden shadow-sm border border-espresso/5 p-2 flex-1 min-h-[250px] flex flex-col justify-stretch">
-                                        <iframe 
-                                            width="100%" 
-                                            height="100%" 
-                                            frameBorder="0" 
-                                            style={{ border: 0, minHeight: '230px', borderRadius: '1.25rem' }} 
-                                            src="https://maps.google.com/maps?q=Gole%20Market,%20Udhampur,%20J&K%20182101&t=&z=15&ie=UTF8&iwloc=&output=embed" 
-                                            allowFullScreen 
+                                        <iframe
+                                            width="100%"
+                                            height="100%"
+                                            frameBorder="0"
+                                            style={{ border: 0, minHeight: '230px', borderRadius: '1.25rem' }}
+                                            src="https://maps.google.com/maps?q=Gole%20Market,%20Udhampur,%20J&K%20182101&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                                            allowFullScreen
                                             loading="lazy"
                                             className="flex-1"
                                         ></iframe>
@@ -1646,7 +1657,7 @@
                     {/* FOOTER / CONTACT SECTION */}
                     <footer id="contact-section" className="bg-espresso text-cream/90 pt-16 pb-8 border-t border-cream/10">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-12 pb-12 border-b border-cream/10">
-                            
+
                             {/* Col 1: Brand Info */}
                             <div className="space-y-4 font-sans">
                                 <div className="flex items-center space-x-2">
@@ -1655,33 +1666,33 @@
                                 </div>
                                 <p className="text-xs text-cream/60 leading-relaxed">Artisanal brews & handcrafted bites in the heart of Udhampur.</p>
                                 <div className="flex space-x-3 pt-2">
-                                    <a 
-                                        href="https://instagram.com" 
-                                        target="_blank" 
-                                        rel="noopener noreferrer" 
+                                    <a
+                                        href="https://instagram.com"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
                                         className="bg-cream/10 hover:bg-amberGold text-cream p-2.5 rounded-full transition-all duration-300 hover:scale-110 flex items-center justify-center min-w-[44px] min-h-[44px]"
                                         title="Instagram"
                                     >
                                         <Icons.Instagram className="w-4 h-4" />
                                     </a>
-                                    <a 
-                                        href="https://facebook.com" 
-                                        target="_blank" 
-                                        rel="noopener noreferrer" 
+                                    <a
+                                        href="https://facebook.com"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
                                         className="bg-cream/10 hover:bg-amberGold text-cream p-2.5 rounded-full transition-all duration-300 hover:scale-110 flex items-center justify-center min-w-[44px] min-h-[44px]"
                                         title="Facebook"
                                     >
                                         <Icons.Facebook className="w-4 h-4" />
                                     </a>
-                                    <a 
-                                        href="https://wa.me/915645642140" 
-                                        target="_blank" 
-                                        rel="noopener noreferrer" 
+                                    <a
+                                        href="https://wa.me/915645642140"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
                                         className="bg-cream/10 hover:bg-amberGold text-cream p-2.5 rounded-full transition-all duration-300 hover:scale-110 flex items-center justify-center min-w-[44px] min-h-[44px]"
                                         title="WhatsApp"
                                     >
                                         <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.73-1.45L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.752.002-2.607-1.01-5.059-2.85-6.905C16.643 2.1 14.195.9 11.594.9c-5.437 0-9.863 4.37-9.867 9.75-.001 1.957.513 3.867 1.49 5.568l-.979 3.578 3.82-.99zm10.934-7.48c-.297-.148-1.758-.867-2.03-.967-.273-.099-.471-.148-.669.148-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.568-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                                            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.73-1.45L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.752.002-2.607-1.01-5.059-2.85-6.905C16.643 2.1 14.195.9 11.594.9c-5.437 0-9.863 4.37-9.867 9.75-.001 1.957.513 3.867 1.49 5.568l-.979 3.578 3.82-.99zm10.934-7.48c-.297-.148-1.758-.867-2.03-.967-.273-.099-.471-.148-.669.148-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.568-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
                                         </svg>
                                     </a>
                                 </div>
@@ -1748,7 +1759,7 @@
                                             <div className="bg-green-100 text-green-700 w-20 h-20 rounded-full flex items-center justify-center mx-auto text-4xl shadow-sm animate-pulse-slow">
                                                 ✓
                                             </div>
-                                            
+
                                             <div className="space-y-2">
                                                 <h3 className="font-serif text-3xl font-black text-espresso">Order Confirmed!</h3>
                                                 <p className="text-espresso/70 text-xs">Your order is recorded and is being prepared with fresh local flavors.</p>
@@ -1775,7 +1786,7 @@
                                                     <span>Prep Est. Time</span>
                                                     <span>20 - 30 Mins</span>
                                                 </div>
-                                                
+
                                                 {/* Summary of items */}
                                                 <div className="border-t border-espresso/10 pt-3 mt-3">
                                                     <p className="text-[10px] text-espresso/50 font-bold uppercase tracking-wider mb-2">Items Ordered</p>
@@ -1806,8 +1817,8 @@
                                                 <span>✓ Stored securely in cafe backoffice servers.</span>
                                             </div>
                                         </div>
-                                        
-                                        <button 
+
+                                        <button
                                             type="button"
                                             onClick={() => {
                                                 setCart([]);
@@ -1842,7 +1853,7 @@
                                             <div className="text-6xl text-espresso/20 animate-bounce">🥪</div>
                                             <h4 className="font-serif text-xl font-black text-espresso">Your tray is empty</h4>
                                             <p className="text-sm text-espresso/60 max-w-[260px] mx-auto leading-relaxed">Your order tray is empty! Explore our menu to add artisanal brews and quick bites.</p>
-                                            <button 
+                                            <button
                                                 type="button"
                                                 onClick={() => {
                                                     setIsCartOpen(false);
@@ -1890,7 +1901,7 @@
                                                                 </p>
                                                             </div>
                                                             <div className="flex flex-col items-end justify-between h-full gap-2">
-                                                                <button 
+                                                                <button
                                                                     type="button"
                                                                     onClick={() => removeFromCart(item.cartKey)}
                                                                     className="text-espresso/45 hover:text-red-600 p-1 rounded-lg hover:bg-espresso/5 transition-colors"
@@ -1899,7 +1910,7 @@
                                                                     <Icons.Trash2 className="w-4 h-4" />
                                                                 </button>
                                                                 <div className="flex items-center bg-cream border border-espresso/15 rounded-lg shadow-sm">
-                                                                    <button 
+                                                                    <button
                                                                         type="button"
                                                                         onClick={() => decreaseQuantity(item.cartKey)}
                                                                         className="p-1.5 hover:bg-espresso/5 rounded-l-lg transition-colors"
@@ -1907,7 +1918,7 @@
                                                                         <Icons.Minus className="w-3 h-3" />
                                                                     </button>
                                                                     <span className="px-2.5 font-black text-xs text-espresso">{item.quantity}</span>
-                                                                    <button 
+                                                                    <button
                                                                         type="button"
                                                                         onClick={() => increaseQuantity(item.cartKey)}
                                                                         className="p-1.5 hover:bg-espresso/5 rounded-r-lg transition-colors"
@@ -1924,7 +1935,7 @@
                                             {/* Order Details Form */}
                                             <div className="space-y-6 pt-6 border-t border-espresso/10">
                                                 <h4 className="font-serif text-lg font-black text-espresso">Order Details</h4>
-                                                
+
                                                 {/* Order Type Selector */}
                                                 <div className="space-y-2">
                                                     <label className="text-[10px] font-black uppercase tracking-widest text-espresso/50">Order Type</label>
@@ -1997,7 +2008,7 @@
                                                 {/* Customer Contact Details */}
                                                 <div className="space-y-4 border-t border-espresso/10 pt-4 font-sans">
                                                     <h4 className="font-serif text-base font-bold text-espresso">Customer Contact Details</h4>
-                                                    
+
                                                     <div className="space-y-1">
                                                         <label className="text-[10px] font-black uppercase tracking-widest text-espresso/60">Full Name</label>
                                                         <input
@@ -2055,7 +2066,7 @@
                                             </div>
 
                                             <div className="space-y-2 font-sans text-xs">
-                                                <button 
+                                                <button
                                                     type="submit"
                                                     disabled={isPlacingOrder}
                                                     className="w-full bg-espresso hover:bg-amberGold text-cream py-4 rounded-xl font-bold transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2 disabled:bg-espresso/50 disabled:cursor-not-allowed"
@@ -2074,7 +2085,7 @@
                                                         </>
                                                     )}
                                                 </button>
-                                                
+
                                                 <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold text-espresso/50 uppercase tracking-wider text-center pt-2">
                                                     <span className="text-espresso/55">🔒</span>
                                                     <span>Secure Cafe Database Submission</span>
@@ -2092,10 +2103,10 @@
                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
                             {/* Backdrop */}
                             <div className="fixed inset-0 bg-espresso/60 backdrop-blur-sm" onClick={() => setCustomizingItem(null)}></div>
-                            
+
                             {/* Modal Content */}
                             <div className="bg-cream border border-espresso/10 rounded-3xl w-full max-w-md p-6 sm:p-8 shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto">
-                                <button 
+                                <button
                                     onClick={() => setCustomizingItem(null)}
                                     className="absolute top-4 right-4 p-2 rounded-full hover:bg-espresso/5 transition-colors"
                                 >
@@ -2122,14 +2133,14 @@
                                                 {customizingItem.variants.map((variant) => {
                                                     const variantPrice = customizingItem.variantPrices ? customizingItem.variantPrices[variant] : (customizingItem.price || 0);
                                                     return (
-                                                        <label 
-                                                            key={variant} 
+                                                        <label
+                                                            key={variant}
                                                             className={`flex justify-between items-center p-3.5 rounded-xl border cursor-pointer transition-all ${modalOption === variant ? 'border-amberGold bg-amberGold/5 font-bold' : 'border-espresso/10 hover:border-espresso/25'}`}
                                                         >
                                                             <div className="flex items-center space-x-3">
-                                                                <input 
-                                                                    type="radio" 
-                                                                    name="variant" 
+                                                                <input
+                                                                    type="radio"
+                                                                    name="variant"
                                                                     value={variant}
                                                                     checked={modalOption === variant}
                                                                     onChange={() => setModalOption(variant)}
@@ -2150,13 +2161,13 @@
                                             <h4 className="text-xs font-bold uppercase tracking-wider text-espresso/60">Select Flavor</h4>
                                             <div className="grid grid-cols-2 gap-2">
                                                 {customizingItem.subflavors.map((flavor) => (
-                                                    <label 
+                                                    <label
                                                         key={flavor}
                                                         className={`flex items-center space-x-3 p-3.5 rounded-xl border cursor-pointer transition-all ${modalOption === flavor ? 'border-amberGold bg-amberGold/5 font-bold' : 'border-espresso/10 hover:border-espresso/25'}`}
                                                     >
-                                                        <input 
-                                                            type="radio" 
-                                                            name="subflavor" 
+                                                        <input
+                                                            type="radio"
+                                                            name="subflavor"
                                                             value={flavor}
                                                             checked={modalOption === flavor}
                                                             onChange={() => setModalOption(flavor)}
@@ -2180,14 +2191,14 @@
                                                     { id: 'Almond', name: 'Almond Milk', price: 30 },
                                                     { id: 'Soy', name: 'Soy Milk', price: 30 }
                                                 ].map((milk) => (
-                                                    <label 
-                                                        key={milk.id} 
+                                                    <label
+                                                        key={milk.id}
                                                         className={`flex flex-col p-3 rounded-xl border cursor-pointer transition-all ${modalMilk === milk.id ? 'border-amberGold bg-amberGold/5 font-bold' : 'border-espresso/10 hover:border-espresso/25'}`}
                                                     >
                                                         <div className="flex items-center space-x-2">
-                                                            <input 
-                                                                type="radio" 
-                                                                name="milk" 
+                                                            <input
+                                                                type="radio"
+                                                                name="milk"
                                                                 value={milk.id}
                                                                 checked={modalMilk === milk.id}
                                                                 onChange={() => setModalMilk(milk.id)}
@@ -2206,14 +2217,14 @@
                                     <div className="flex justify-between items-center pt-2 font-sans">
                                         <span className="text-xs font-bold uppercase tracking-wider text-espresso/60">Quantity</span>
                                         <div className="flex items-center bg-espresso/5 border border-espresso/10 rounded-xl">
-                                            <button 
+                                            <button
                                                 onClick={() => setModalQuantity(q => Math.max(1, q - 1))}
                                                 className="p-2 hover:bg-espresso/10 rounded-l-xl transition-colors"
                                             >
                                                 <Icons.Minus className="w-4 h-4" />
                                             </button>
                                             <span className="px-4 font-bold text-sm text-espresso">{modalQuantity}</span>
-                                            <button 
+                                            <button
                                                 onClick={() => setModalQuantity(q => q + 1)}
                                                 className="p-2 hover:bg-espresso/10 rounded-r-xl transition-colors"
                                             >
@@ -2223,7 +2234,7 @@
                                     </div>
 
                                     {/* Action button */}
-                                    <button 
+                                    <button
                                         onClick={() => {
                                             addCustomizedToCart(customizingItem, modalOption, modalMilk, modalQuantity);
                                             setCustomizingItem(null);
@@ -2240,7 +2251,7 @@
                     {/* STICKY MOBILE CART BAR */}
                     {cart.length > 0 && !isCartOpen && (
                         <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-espresso text-cream border-t border-espresso/20 shadow-[0_-4px_15px_rgba(0,0,0,0.15)] animate-slide-up">
-                            <button 
+                            <button
                                 onClick={() => setIsCartOpen(true)}
                                 className="w-full px-5 py-4 flex justify-between items-center text-sm font-bold tracking-wide active:bg-espresso/90 transition-colors min-h-[48px]"
                             >
@@ -2261,7 +2272,7 @@
                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in font-sans">
                             <div className="fixed inset-0 bg-espresso/60 backdrop-blur-sm" onClick={() => setShowReservationModal(false)}></div>
                             <div className="bg-cream border border-espresso/10 rounded-3xl w-full max-w-md p-6 sm:p-8 shadow-2xl relative z-10 animate-slide-up text-center space-y-6">
-                                <button 
+                                <button
                                     onClick={() => setShowReservationModal(false)}
                                     className="absolute top-4 right-4 p-2 rounded-full hover:bg-espresso/5 transition-colors"
                                 >
@@ -2306,7 +2317,7 @@
                                         <p className="text-xs font-semibold text-espresso/80">📍 MSR Cafe, Gole Market, Udhampur - 182101, J&K.</p>
                                     </div>
                                 </div>
-                                <button 
+                                <button
                                     onClick={() => setShowReservationModal(false)}
                                     className="w-full bg-espresso hover:bg-amberGold text-cream py-3 rounded-xl font-bold transition-all shadow-md active:scale-95"
                                 >
@@ -2334,7 +2345,7 @@
                                             if (adminPin === '1234') {
                                                 setIsAdminAuthenticated(true);
                                             } else {
-                                                alert("Invalid passcode. Try '1234' for access.");
+                                                alert("Invalid passcode. Access denied.");
                                                 setAdminPin('');
                                             }
                                         }} className="space-y-4">
@@ -2352,7 +2363,7 @@
                                                 Access Dashboard
                                             </button>
                                         </form>
-                                        <button 
+                                        <button
                                             onClick={() => { window.location.hash = ''; }}
                                             className="text-xs text-espresso/50 hover:text-espresso font-bold hover:underline"
                                         >
@@ -2376,7 +2387,7 @@
                                                 <span className={`text-[10px] font-bold uppercase px-3 py-1 rounded-full ${isPlaceholder ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-green-100 text-green-800 border border-green-200'}`}>
                                                     ● {isPlaceholder ? 'Local Storage DB' : 'Live Supabase'}
                                                 </span>
-                                                <button 
+                                                <button
                                                     onClick={fetchAdminData}
                                                     disabled={isLoadingAdminData}
                                                     className="bg-cream/10 hover:bg-cream/20 text-cream p-2.5 rounded-xl transition-all disabled:opacity-50 min-w-[44px] min-h-[44px] flex items-center justify-center font-bold"
@@ -2384,8 +2395,8 @@
                                                 >
                                                     🔄
                                                 </button>
-                                                <button 
-                                                    onClick={() => { 
+                                                <button
+                                                    onClick={() => {
                                                         setIsAdminAuthenticated(false);
                                                         window.location.hash = '';
                                                     }}
@@ -2424,13 +2435,13 @@
 
                                             {/* Tabs Toggle */}
                                             <div className="flex border-b border-espresso/10 gap-6">
-                                                <button 
+                                                <button
                                                     onClick={() => setAdminActiveTab('orders')}
                                                     className={`pb-3 text-sm font-bold border-b-2 transition-all min-h-[44px] ${adminActiveTab === 'orders' ? 'border-amberGold text-espresso' : 'border-transparent text-espresso/50 hover:text-espresso'}`}
                                                 >
                                                     Orders Tracker ({adminOrders.length})
                                                 </button>
-                                                <button 
+                                                <button
                                                     onClick={() => setAdminActiveTab('reservations')}
                                                     className={`pb-3 text-sm font-bold border-b-2 transition-all min-h-[44px] ${adminActiveTab === 'reservations' ? 'border-amberGold text-espresso' : 'border-transparent text-espresso/50 hover:text-espresso'}`}
                                                 >
@@ -2461,16 +2472,15 @@
                                                                             <span className="font-mono text-amberGold font-extrabold text-sm">{order.id}</span>
                                                                             <p className="text-[10px] text-espresso/40 font-medium">{new Date(order.created_at).toLocaleString()}</p>
                                                                         </div>
-                                                                        <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full ${
-                                                                            order.status === 'Pending' ? 'bg-amber-100 text-amber-800' :
-                                                                            order.status === 'Preparing' ? 'bg-blue-100 text-blue-800' :
-                                                                            order.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                                                                            'bg-red-100 text-red-800'
-                                                                        }`}>
+                                                                        <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full ${order.status === 'Pending' ? 'bg-amber-100 text-amber-800' :
+                                                                                order.status === 'Preparing' ? 'bg-blue-100 text-blue-800' :
+                                                                                    order.status === 'Completed' ? 'bg-green-100 text-green-800' :
+                                                                                        'bg-red-100 text-red-800'
+                                                                            }`}>
                                                                             {order.status}
                                                                         </span>
                                                                     </div>
-                                                                    
+
                                                                     {/* Customer Info */}
                                                                     <div className="grid grid-cols-2 gap-2 text-xs text-espresso/70 border-t border-b border-espresso/5 py-2 text-left">
                                                                         <div>
@@ -2514,11 +2524,10 @@
                                                                             <button
                                                                                 key={st}
                                                                                 onClick={() => handleUpdateOrderStatus(order.id, st)}
-                                                                                className={`text-[10px] font-extrabold uppercase px-2.5 py-1.5 rounded-lg border transition-all min-h-[44px] ${
-                                                                                    order.status === st 
-                                                                                        ? 'bg-espresso text-cream border-espresso' 
+                                                                                className={`text-[10px] font-extrabold uppercase px-2.5 py-1.5 rounded-lg border transition-all min-h-[44px] ${order.status === st
+                                                                                        ? 'bg-espresso text-cream border-espresso'
                                                                                         : 'bg-transparent text-espresso/60 border-espresso/15 hover:bg-espresso/5'
-                                                                                }`}
+                                                                                    }`}
                                                                             >
                                                                                 {st}
                                                                             </button>
@@ -2593,4 +2602,5 @@
         root.render(<App />);
     </script>
 </body>
+
 </html>
