@@ -636,6 +636,17 @@
             const [isLoadingAdminData, setIsLoadingAdminData] = useState(false);
             const [adminActiveTab, setAdminActiveTab] = useState('orders');
 
+            // Customer Reviews State
+            const [reviews, setReviews] = useState([]);
+            const [isReviewsLoading, setIsReviewsLoading] = useState(false);
+            const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+            const [newReview, setNewReview] = useState({
+                customerName: '',
+                rating: 5,
+                comment: ''
+            });
+            const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
             useEffect(() => {
                 const handleHashChange = () => {
                     setIsAdminView(window.location.hash === '#admin');
@@ -644,18 +655,73 @@
                 return () => window.removeEventListener('hashchange', handleHashChange);
             }, []);
 
+            const fetchReviews = async () => {
+                setIsReviewsLoading(true);
+                try {
+                    const { data, error } = await window.supabaseClient
+                        .from('reviews')
+                        .select('*')
+                        .order('created_at', { ascending: false });
+                    if (error) {
+                        console.error("Failed to fetch reviews:", error);
+                    } else if (data) {
+                        setReviews(data);
+                    }
+                } catch (err) {
+                    console.error("Error fetching reviews:", err);
+                }
+                setIsReviewsLoading(false);
+            };
+
+            useEffect(() => {
+                fetchReviews();
+            }, []);
+
             const fetchAdminData = async () => {
                 setIsLoadingAdminData(true);
                 try {
                     const ordersResult = await window.supabaseClient.from('orders').select('*').order('created_at', { ascending: false });
                     const reservationsResult = await window.supabaseClient.from('reservations').select('*').order('created_at', { ascending: false });
+                    const reviewsResult = await window.supabaseClient.from('reviews').select('*').order('created_at', { ascending: false });
 
                     if (ordersResult.data) setAdminOrders(ordersResult.data);
                     if (reservationsResult.data) setAdminReservations(reservationsResult.data);
+                    if (reviewsResult.data) setReviews(reviewsResult.data);
                 } catch (err) {
                     console.error("Failed to fetch admin data:", err);
                 }
                 setIsLoadingAdminData(false);
+            };
+
+            const handleReviewSubmit = async (e) => {
+                e.preventDefault();
+                if (!newReview.customerName.trim() || !newReview.comment.trim()) {
+                    alert("Please fill in all fields.");
+                    return;
+                }
+                setIsSubmittingReview(true);
+                try {
+                    const { data, error } = await window.supabaseClient
+                        .from('reviews')
+                        .insert({
+                            customer_name: newReview.customerName.trim(),
+                            rating: newReview.rating,
+                            comment: newReview.comment.trim()
+                        });
+                    if (error) {
+                        console.error("Supabase Submission Error:", error);
+                        alert("Submission failed: " + (error.message || JSON.stringify(error)));
+                    } else {
+                        showToast("Review submitted successfully! Thank you.");
+                        setNewReview({ customerName: '', rating: 5, comment: '' });
+                        setIsReviewModalOpen(false);
+                        fetchReviews();
+                    }
+                } catch (err) {
+                    console.error("Error submitting review:", err);
+                    alert("Error: " + err.message);
+                }
+                setIsSubmittingReview(false);
             };
 
             useEffect(() => {
@@ -978,6 +1044,9 @@
                                 <a href="#reservation-section" className="font-medium text-espresso/80 hover:text-amberGold transition-colors py-2 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-amberGold after:transition-all hover:after:w-full">
                                     Reserve Table
                                 </a>
+                                <a href="#reviews-section" className="font-medium text-espresso/80 hover:text-amberGold transition-colors py-2 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-amberGold after:transition-all hover:after:w-full">
+                                    Reviews
+                                </a>
                                 <a href="#contact-section" className="font-medium text-espresso/80 hover:text-amberGold transition-colors py-2 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-amberGold after:transition-all hover:after:w-full">
                                     Contact
                                 </a>
@@ -1033,13 +1102,8 @@
                                         <a href="#" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-amberGold transition-colors">Home</a>
                                         <a href="#menu-section" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-amberGold transition-colors">Menu</a>
                                         <a href="#about-section" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-amberGold transition-colors">About Us</a>
-                                        <a
-                                            href="#reservation-section"
-                                            onClick={() => setIsMobileMenuOpen(false)}
-                                            className="hover:text-amberGold transition-colors text-left"
-                                        >
-                                            Reserve Table
-                                        </a>
+                                        <a href="#reservation-section" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-amberGold transition-colors">Reserve Table</a>
+                                        <a href="#reviews-section" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-amberGold transition-colors">Reviews</a>
                                         <a href="#contact-section" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-amberGold transition-colors">Contact</a>
                                     </nav>
                                 </div>
@@ -1396,6 +1460,102 @@
                                     <img src="assets/cozy_cafe.png" alt="MSR Cafe Ambience" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                                 </div>
                             </div>
+                        </div>
+                    </section>
+
+                    {/* CUSTOMER REVIEWS SECTION */}
+                    <section id="reviews-section" className="py-20 bg-cream border-t border-espresso/10">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+                            
+                            {/* Section Header */}
+                            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-espresso/10 pb-8">
+                                <Reveal className="space-y-2 block">
+                                    <span className="text-amberGold text-xs uppercase tracking-widest font-black">Testimonials</span>
+                                    <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-black text-espresso">What Our Customers Say</h2>
+                                    <p className="text-espresso/70 text-sm max-w-xl">Read honest reviews from our neighborhood regulars about our artisanal brews and bites.</p>
+                                </Reveal>
+
+                                {/* Overall Rating Summary */}
+                                <Reveal className="flex items-center gap-6 bg-espresso/5 px-6 py-5 rounded-3xl border border-espresso/5 min-w-[280px]">
+                                    <div className="text-center">
+                                        <span className="block text-4xl font-serif font-black text-espresso">
+                                            {reviews.length > 0 ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1) : '4.8'}
+                                        </span>
+                                        <span className="text-[10px] text-espresso/50 font-sans uppercase tracking-wider font-semibold">Overall Rating</span>
+                                    </div>
+                                    <div className="flex-1 space-y-1">
+                                        <div className="flex text-amberGold text-sm">
+                                            {(() => {
+                                                const avg = reviews.length > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 4.8;
+                                                const stars = [];
+                                                for (let i = 1; i <= 5; i++) {
+                                                    stars.push(
+                                                        <span key={i} className="leading-none">
+                                                            {i <= Math.round(avg) ? '★' : '☆'}
+                                                        </span>
+                                                    );
+                                                }
+                                                return stars;
+                                            })()}
+                                        </div>
+                                        <p className="text-xs font-bold text-espresso/70 font-sans">
+                                            Based on {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}
+                                        </p>
+                                    </div>
+                                </Reveal>
+                            </div>
+
+                            {/* Review Grid */}
+                            {isReviewsLoading ? (
+                                <div className="text-center py-12 text-espresso/50 font-semibold font-sans">Loading reviews...</div>
+                            ) : reviews.length === 0 ? (
+                                <div className="text-center py-16 bg-espresso/5 rounded-3xl border border-espresso/5 space-y-4">
+                                    <p className="text-espresso/60 font-sans italic">No reviews yet. Be the first to share your experience!</p>
+                                    <button 
+                                        onClick={() => setIsReviewModalOpen(true)}
+                                        className="bg-espresso text-cream hover:bg-amberGold px-6 py-3 rounded-xl text-xs font-bold transition-all"
+                                    >
+                                        Write a Review
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {reviews.map((rev) => (
+                                        <Reveal key={rev.id} className="bg-cream border border-espresso/10 p-6 rounded-3xl shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
+                                            <div className="space-y-4">
+                                                <div className="flex justify-between items-start">
+                                                    <div className="flex flex-col">
+                                                        <h4 className="font-serif text-lg font-black text-espresso group-hover:text-amberGold transition-colors duration-300">{rev.customer_name}</h4>
+                                                        <span className="text-[10px] text-espresso/45 font-bold uppercase tracking-wider">
+                                                            {rev.created_at ? new Date(rev.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recently'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex text-amberGold text-xs">
+                                                        {Array.from({ length: 5 }).map((_, i) => (
+                                                            <span key={i}>{i < rev.rating ? '★' : '☆'}</span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <p className="text-xs text-espresso/70 italic leading-relaxed font-sans">
+                                                    "{rev.comment}"
+                                                </p>
+                                            </div>
+                                        </Reveal>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Submit Review CTA */}
+                            {reviews.length > 0 && (
+                                <div className="text-center pt-6">
+                                    <button
+                                        onClick={() => setIsReviewModalOpen(true)}
+                                        className="bg-espresso text-cream hover:bg-amberGold px-8 py-4 rounded-xl text-xs font-bold transition-all shadow hover:shadow-lg active:scale-95 flex items-center gap-2 mx-auto"
+                                    >
+                                        Share Your Experience <span className="text-sm">💬</span>
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </section>
 
@@ -2267,6 +2427,84 @@
                         </div>
                     )}
 
+                    {/* CUSTOMER REVIEW SUBMISSION MODAL */}
+                    {isReviewModalOpen && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in font-sans">
+                            <div className="fixed inset-0 bg-espresso/60 backdrop-blur-sm" onClick={() => setIsReviewModalOpen(false)}></div>
+                            <div className="bg-[#FDFBF7] border border-espresso/10 rounded-3xl w-full max-w-md p-6 sm:p-8 shadow-2xl relative z-10 animate-slide-up space-y-6">
+                                <button
+                                    onClick={() => setIsReviewModalOpen(false)}
+                                    className="absolute top-4 right-4 p-2 rounded-full hover:bg-espresso/5 transition-colors"
+                                >
+                                    <Icons.X className="w-6 h-6" />
+                                </button>
+                                <div className="space-y-1">
+                                    <h3 className="font-serif text-2xl font-black text-espresso">Share Your Experience</h3>
+                                    <p className="text-xs text-espresso/60">We would love to hear your feedback about MSR Cafe.</p>
+                                </div>
+                                <form onSubmit={handleReviewSubmit} className="space-y-4 text-left">
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-black uppercase tracking-wider text-espresso/60">Your Name</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={newReview.customerName}
+                                            onChange={(e) => setNewReview(prev => ({ ...prev, customerName: e.target.value }))}
+                                            placeholder="Enter your name"
+                                            className="w-full bg-espresso/5 border border-espresso/10 rounded-xl px-4 py-2.5 text-espresso focus:outline-none focus:border-amberGold text-sm font-semibold"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-black uppercase tracking-wider text-espresso/60">Your Rating</label>
+                                        <div className="flex items-center gap-2 py-2">
+                                            {Array.from({ length: 5 }).map((_, i) => {
+                                                const starVal = i + 1;
+                                                return (
+                                                    <button
+                                                        key={i}
+                                                        type="button"
+                                                        onClick={() => setNewReview(prev => ({ ...prev, rating: starVal }))}
+                                                        className={`text-2xl transition-all hover:scale-110 ${starVal <= newReview.rating ? 'text-amberGold' : 'text-espresso/20'}`}
+                                                    >
+                                                        ★
+                                                    </button>
+                                                );
+                                            })}
+                                            <span className="text-xs font-bold text-espresso/65 ml-2 font-sans">
+                                                {newReview.rating} out of 5 stars
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-black uppercase tracking-wider text-espresso/60">Your Review</label>
+                                        <textarea
+                                            required
+                                            rows="4"
+                                            value={newReview.comment}
+                                            onChange={(e) => setNewReview(prev => ({ ...prev, comment: e.target.value }))}
+                                            placeholder="What did you like? How was the coffee, service, or ambience?"
+                                            className="w-full bg-espresso/5 border border-espresso/10 rounded-xl px-4 py-2.5 text-espresso focus:outline-none focus:border-amberGold text-sm font-medium leading-relaxed resize-none"
+                                        />
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmittingReview}
+                                        className="w-full bg-espresso hover:bg-amberGold disabled:bg-espresso/50 text-cream py-3.5 rounded-xl font-bold transition-all shadow-md active:scale-95 text-sm flex items-center justify-center gap-2"
+                                    >
+                                        {isSubmittingReview ? (
+                                            <>
+                                                <span className="animate-spin border-2 border-cream border-t-transparent rounded-full w-4 h-4 mr-2" />
+                                                Submitting...
+                                            </>
+                                        ) : (
+                                            'Submit Review'
+                                        )}
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
                     {/* RESERVATION CONFIRMED POPUP MODAL */}
                     {showReservationModal && reservationModalDetails && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in font-sans">
@@ -2410,7 +2648,7 @@
                                         {/* Dashboard Body */}
                                         <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
                                             {/* Stats Counters */}
-                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                                                 <div className="bg-[#FAF7F0] p-4 rounded-2xl border border-espresso/5 shadow-sm text-left">
                                                     <p className="text-[10px] font-bold uppercase text-espresso/40 tracking-wider">Total Orders</p>
                                                     <p className="text-2xl font-black text-espresso mt-1">{adminOrders.length}</p>
@@ -2431,6 +2669,12 @@
                                                     <p className="text-[10px] font-bold uppercase text-espresso/40 tracking-wider">Table Bookings</p>
                                                     <p className="text-2xl font-black text-espresso mt-1">{adminReservations.length}</p>
                                                 </div>
+                                                <div className="bg-[#FAF7F0] p-4 rounded-2xl border border-espresso/5 shadow-sm text-left col-span-2 md:col-span-1">
+                                                    <p className="text-[10px] font-bold uppercase text-espresso/40 tracking-wider">Average Rating</p>
+                                                    <p className="text-2xl font-black text-espresso mt-1">
+                                                        {reviews.length > 0 ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1) : '4.8'} ★
+                                                    </p>
+                                                </div>
                                             </div>
 
                                             {/* Tabs Toggle */}
@@ -2446,6 +2690,12 @@
                                                     className={`pb-3 text-sm font-bold border-b-2 transition-all min-h-[44px] ${adminActiveTab === 'reservations' ? 'border-amberGold text-espresso' : 'border-transparent text-espresso/50 hover:text-espresso'}`}
                                                 >
                                                     Table Reservations ({adminReservations.length})
+                                                </button>
+                                                <button
+                                                    onClick={() => setAdminActiveTab('reviews')}
+                                                    className={`pb-3 text-sm font-bold border-b-2 transition-all min-h-[44px] ${adminActiveTab === 'reviews' ? 'border-amberGold text-espresso' : 'border-transparent text-espresso/50 hover:text-espresso'}`}
+                                                >
+                                                    Customer Reviews ({reviews.length})
                                                 </button>
                                             </div>
 
@@ -2538,7 +2788,7 @@
                                                         ))}
                                                     </div>
                                                 )
-                                            ) : (
+                                            ) : adminActiveTab === 'reservations' ? (
                                                 /* Reservations List Tab */
                                                 adminReservations.length === 0 ? (
                                                     <div className="bg-[#FAF7F0] p-12 rounded-3xl border border-espresso/5 text-center text-espresso/50 text-sm font-bold">
@@ -2577,6 +2827,40 @@
                                                                             {res.special_notes || <span className="text-espresso/30 italic">None</span>}
                                                                         </td>
                                                                         <td className="p-4 text-[10px] text-espresso/45 text-left">{new Date(res.created_at).toLocaleString()}</td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                )
+                                            ) : (
+                                                /* Customer Reviews Tab */
+                                                reviews.length === 0 ? (
+                                                    <div className="bg-[#FAF7F0] p-12 rounded-3xl border border-espresso/5 text-center text-espresso/50 text-sm font-bold">
+                                                        No customer reviews received yet.
+                                                    </div>
+                                                ) : (
+                                                    <div className="overflow-x-auto bg-[#FAF7F0] border border-espresso/5 rounded-3xl shadow-sm">
+                                                        <table className="w-full text-left border-collapse text-sm">
+                                                            <thead>
+                                                                <tr className="bg-espresso/5 text-[10px] font-black uppercase tracking-wider text-espresso/50 border-b border-espresso/10">
+                                                                    <th className="p-4">ID</th>
+                                                                    <th className="p-4">Customer</th>
+                                                                    <th className="p-4">Rating</th>
+                                                                    <th className="p-4">Comment</th>
+                                                                    <th className="p-4">Submitted</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {reviews.map((rev) => (
+                                                                    <tr key={rev.id} className="border-b border-espresso/5 hover:bg-espresso/5 transition-colors font-sans text-xs text-espresso/80">
+                                                                        <td className="p-4 font-mono font-bold text-amberGold max-w-[120px] truncate" title={rev.id}>{rev.id}</td>
+                                                                        <td className="p-4 text-left font-extrabold text-espresso">{rev.customer_name}</td>
+                                                                        <td className="p-4 text-left font-black text-amberGold">
+                                                                            {rev.rating} ★ ({'★'.repeat(rev.rating)}{'☆'.repeat(5 - rev.rating)})
+                                                                        </td>
+                                                                        <td className="p-4 max-w-[300px] truncate text-left" title={rev.comment}>{rev.comment}</td>
+                                                                        <td className="p-4 text-[10px] text-espresso/45 text-left">{new Date(rev.created_at).toLocaleString()}</td>
                                                                     </tr>
                                                                 ))}
                                                             </tbody>
